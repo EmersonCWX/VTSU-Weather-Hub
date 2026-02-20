@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vermont State University Lyndon | Weather Center</title>
+    <style>
+        :root {
+            --vtsu-turquoise: #00A5B3;
+            --vtsu-red: #EC3754;
+            --dark-gray: #1a1a1a;
+            --white: #ffffff;
+            --clock-bg: #2a2a2a;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-gray);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Navigation Bar --- */
+        .top-nav {
+            background-color: var(--dark-gray);
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            padding: 0.8rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        /* --- Clock Section --- */
+        .clock-container {
+            padding-left: 0;
+            display: flex;
+            gap: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            grid-column: 2;
+            justify-self: center;
+        }
+
+        .clock-item {
+            background: var(--clock-bg);
+            padding: 5px 12px;
+            border-radius: 4px;
+            border-left: 3px solid var(--vtsu-turquoise);
+        }
+
+        .clock-label {
+            font-size: 0.6rem;
+            color: #aaa;
+            display: block;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .time-display {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--white);
+            letter-spacing: 1px;
+        }
+
+        /* --- Nav Links --- */
+        .nav-links {
+            display: flex;
+            justify-content: flex-end;
+            grid-column: 3;
+            justify-self: end;
+            margin-right: 12px;
+        }
+
+        /* --- Left Hurricanes Dropdown --- */
+        .left-nav {
+            display: flex;
+            align-items: center;
+            grid-column: 1;
+            justify-self: start;
+            padding-left: 12px;
+            gap: 8px;
+        }
+
+        .left-nav .dropdown + .dropdown {
+            margin-left: 12px;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-btn {
+            background: transparent;
+            color: var(--white);
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 8px 10px;
+            font-weight: 700;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 110%;
+            background: var(--clock-bg);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px;
+            padding: 6px 8px;
+            min-width: 280px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+
+        .dropdown-content a {
+            display: block;
+            color: var(--white);
+            text-decoration: none;
+            padding: 8px 10px;
+            font-weight: 600;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .nav-item {
+            white-space: nowrap;
+        }
+
+        .dropdown-content a:hover {
+            background: rgba(0,0,0,0.2);
+            color: var(--vtsu-turquoise);
+        }
+
+        .dropdown.open .dropdown-content {
+            display: block;
+        }
+
+        .nav-links a {
+            color: var(--white);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+            text-transform: uppercase;
+        }
+
+        .nav-links .nav-disabled {
+            color: #777;
+            margin: 0 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: not-allowed;
+            opacity: 0.7;
+            user-select: none;
+        }
+
+        .nav-links a:hover {
+            color: var(--vtsu-turquoise);
+        }
+
+        /* --- Layout Container --- */
+        .main-wrapper {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+
+        .splash-container {
+            text-align: center;
+            background: transparent;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: none;
+            max-width: 1100px;
+            width: 95%;
+            color: var(--white);
+        }
+
+        .logo-area h1 { 
+            margin: 0; 
+            font-size: 2.2rem; 
+            color: var(--vtsu-turquoise);
+            font-weight: 800;
+        }
+
+        .logo-area h2 { 
+            margin: 5px 0 25px 0; 
+            font-size: 1.1rem; 
+            border-bottom: 4px solid var(--vtsu-red);
+            display: inline-block;
+            padding-bottom: 5px;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        /* --- Radar Frame --- */
+        .loop-frame {
+            width: 100%;
+            background-color: transparent;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 0 auto 1rem auto;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        #radar-loop {
+            width: 800px;
+            height: 600px;
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+            object-fit: fill;
+            background-color: transparent;
+            margin: 0 auto;
+            border-radius: 4px;
+        }
+
+        .loop-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #666;
+            padding: 0;
+            text-align: center;
+        }
+
+        .status-dot {
+            height: 10px; width: 10px;
+            background-color: var(--vtsu-red);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* --- Warning Notification Box --- */
+        .warning-notification {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            animation: slideUpFadeIn 0.5s ease-out forwards;
+            box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes slideUpFadeIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .warning-notification.hide {
+            animation: slideDownFadeOut 0.5s ease-in forwards;
+        }
+
+        @keyframes slideDownFadeOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        .warning-content {
+            padding: 20px;
+            color: white;
+            font-weight: bold;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        /* Tornado Warning */
+        .warning-notification.tornado {
+            background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+        }
+
+        /* Severe Thunderstorm Warning */
+        .warning-notification.severe-thunderstorm {
+            background: linear-gradient(135deg, #ff6b00 0%, #ffa500 100%);
+        }
+
+        /* Tornado Emergency */
+        .warning-notification.tornado-emergency {
+            background: linear-gradient(135deg, #7b2cbf 0%, #c77dff 100%);
+            animation: slideUpFadeIn 0.5s ease-out forwards, flash 0.5s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .warning-title {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .warning-description {
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .warning-continuation {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            opacity: 0.95;
+            font-style: italic;
+        }
+
+        .warning-local-alert {
+            font-size: 1.1rem;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+            color: #ffff00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .warning-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .warning-close-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .enter-btn {
+            margin-top: 2rem;
+            display: inline-block;
+            background-color: var(--vtsu-red);
+            color: white;
+            padding: 14px 50px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 800;
+            transition: transform 0.2s;
+        }
+
+        .enter-btn:hover {
+            transform: scale(1.02);
+            background-color: #d12a45;
+        }
+
+        /* --- Footer Credit --- */
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        /* --- Responsive: Portrait / narrow mobile (e.g., 9:16 devices) --- */
+        @media (orientation: portrait) and (max-width: 900px) {
+            .top-nav {
+                grid-template-columns: 1fr;
+                grid-auto-rows: auto;
+                padding: 0.6rem 0.6rem;
+                gap: 6px;
+            }
+
+            .left-nav, .clock-container, .nav-links {
+                grid-column: auto;
+                justify-self: center;
+                align-items: center;
+            }
+
+            .left-nav {
+                padding-left: 0;
+                justify-content: center;
+            }
+
+            .clock-container {
+                justify-self: center;
+                gap: 8px;
+                padding: 0 6px;
+                cursor: pointer;
+            }
+
+            .clock-item {
+                padding: 6px 10px;
+            }
+
+            .clock-label {
+                font-size: 0.55rem;
+            }
+
+            .time-display {
+                font-size: 0.9rem;
+            }
+
+            .nav-links {
+                justify-content: center;
+                flex-wrap: wrap;
+                margin: 6px 0 0 0;
+                padding: 0 6px 6px 6px;
+            }
+
+            .nav-links a {
+                margin: 6px 8px;
+                font-size: 0.95rem;
+                padding: 6px 8px;
+                display: inline-block;
+            }
+
+            .nav-links .nav-disabled {
+                margin: 6px 8px;
+                font-size: 0.95rem;
+                padding: 6px 8px;
+                display: inline-block;
+            }
+
+            .splash-container {
+                padding: 1rem;
+                width: 98%;
+                max-width: 980px;
+            }
+
+            .logo-area h1 { font-size: 1.6rem; }
+            .logo-area h2 { font-size: 1rem; }
+
+            /* Make radar image responsive and avoid overflow on tall screens */
+            #radar-loop {
+                width: 94vw;
+                height: auto;
+                max-height: 70vh;
+                object-fit: contain;
+            }
+
+            .loop-frame { padding: 8px 0; }
+
+            .enter-btn { padding: 12px 24px; }
+
+            footer { font-size: 0.82rem; padding: 0.8rem 0; }
+
+            /* Make dropdowns easier to interact with on touch */
+            .dropdown-btn { padding: 10px 12px; }
+            .dropdown-content { min-width: 220px; left: auto; right: 0; }
+
+            .main-wrapper {
+                padding: 15px;
+                padding-bottom: 110px;
+            }
+        }
+
+        /* Mobile-specific styles for very small screens */
+        @media (max-width: 600px) {
+            .top-nav {
+                padding: 0.5rem 0;
+                gap: 0;
+            }
+
+            .clock-item {
+                padding: 4px 8px;
+                font-size: 0.85rem;
+            }
+
+            .clock-label {
+                font-size: 0.5rem;
+            }
+
+            .time-display {
+                font-size: 0.8rem;
+            }
+
+            .nav-links a, .nav-links .nav-disabled {
+                margin: 4px 6px;
+                font-size: 0.8rem;
+                padding: 4px 6px;
+            }
+
+            .logo-area h1 { 
+                font-size: 1.3rem; 
+                margin: 0;
+            }
+
+            .logo-area h2 { 
+                font-size: 0.9rem; 
+                margin: 3px 0 15px 0;
+            }
+
+            #radar-loop {
+                width: 100vw;
+                height: auto;
+                max-height: 50vh;
+            }
+
+            .loop-controls {
+                font-size: 0.75rem;
+            }
+
+            /* Warning styling for mobile */
+            .warning-notification {
+                width: 100%;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .warning-content {
+                padding: 12px 40px 12px 12px;
+                min-height: auto;
+            }
+
+            .warning-title {
+                font-size: 1rem;
+                margin-bottom: 4px;
+            }
+
+            .warning-description {
+                font-size: 0.85rem;
+                line-height: 1.3;
+            }
+
+            .warning-continuation {
+                font-size: 0.75rem;
+                margin-top: 4px;
+            }
+
+            .warning-local-alert {
+                font-size: 0.9rem;
+                margin-top: 8px;
+                padding-top: 8px;
+                letter-spacing: 0.5px;
+            }
+
+            .warning-close-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 20px;
+                top: 8px;
+                right: 8px;
+            }
+
+            .dropdown-content {
+                min-width: 180px;
+                max-height: 60vh;
+                overflow-y: auto;
+            }
+
+            .dropdown-content a {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+            }
+
+            footer {
+                font-size: 0.75rem;
+                padding: 0.6rem 0;
+            }
+
+            .main-wrapper {
+                padding: 10px;
+                padding-bottom: 100px;
+            }
+        }
+
+        /* Extra small devices (< 480px) */
+        @media (max-width: 480px) {
+            .top-nav {
+                padding: 0.3rem 0;
+            }
+
+            .logo-area h1 { 
+                font-size: 1.1rem;
+            }
+
+            .logo-area h2 { 
+                font-size: 0.8rem;
+            }
+
+            .splash-container {
+                padding: 0.5rem;
+            }
+
+            /* Compact navigation - stack dropdowns vertically */
+            .left-nav {
+                flex-wrap: wrap;
+                gap: 4px;
+                padding-left: 4px;
+            }
+
+            .left-nav .dropdown + .dropdown {
+                margin-left: 0;
+                margin-top: 6px;
+            }
+
+            .dropdown-btn {
+                font-size: 0.75rem;
+                padding: 6px 8px;
+            }
+
+            .nav-links a {
+                margin: 3px 4px;
+                font-size: 0.7rem;
+                padding: 3px 5px;
+            }
+
+            #radar-loop {
+                max-height: 40vh;
+            }
+
+            .warning-content {
+                padding: 8px 36px 8px 8px;
+            }
+
+            .warning-title {
+                font-size: 0.9rem;
+            }
+
+            .warning-description {
+                font-size: 0.75rem;
+            }
+
+            .warning-close-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 18px;
+            }
+
+            .main-wrapper {
+                padding: 8px;
+                padding-bottom: 90px;
+            }
+        }
+
+        /* Rising stack animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUpStaggered {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="left-nav">
+            <div class="dropdown">
+                <button class="dropdown-btn nav-item" aria-haspopup="true" aria-expanded="false">Hurricanes ▾</button>
+                <div class="dropdown-content" role="menu" aria-label="Hurricanes menu">
+                    <a class="nav-item" href="https://www.aoml.noaa.gov/ftp/hrd/data/RTradar/" target="_blank" rel="noopener noreferrer">Tail Doppler Radar</a>
+                    <a class="nav-item" href="https://ftp.nhc.noaa.gov/atcf/btk/" target="_blank" rel="noopener noreferrer">ATCF</a>
+                    <a class="nav-item" href="https://www.nhc.noaa.gov/text/MIAREPRPD.shtml" target="_blank" rel="noopener noreferrer">TCPOD</a>
+                    <a class="nav-item" href="https://www.star.nesdis.noaa.gov/socd/mecb/sar/sarwinds_tropical.php?year=2026" target="_blank" rel="noopener noreferrer">SAR</a>
+                    <a class="nav-item" href="https://tropic.ssec.wisc.edu/real-time/mimtc/tc.shtml" target="_blank" rel="noopener noreferrer">Microwave</a>
+                    <a class="nav-item" href="https://rammb.cira.colostate.edu/ramsdis/online/tropical-new.asp" target="_blank" rel="noopener noreferrer">RAMMB</a>
+                    <a class="nav-item" href="https://cyclonicwx.com/recon/" target="_blank" rel="noopener noreferrer">Live Recon Data</a>
+                    <a class="nav-item" href="https://tropical.atmos.colostate.edu/Realtime/index.php?loc=northatlantic" target="_blank" rel="noopener noreferrer">Seasonal ACE</a>
+                    <a class="nav-item" href="https://manati.star.nesdis.noaa.gov/datasets/ASCATBData.php" target="_blank" rel="noopener noreferrer">ASCAT</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="dropdown-btn nav-item" aria-haspopup="true" aria-expanded="false">Severe Weather ▾</button>
+                <div class="dropdown-content" role="menu" aria-label="Severe Weather menu">
+                    <a class="nav-item" href="https://radarhub.arrc.ou.edu/archive/raxpol/" target="_blank" rel="noopener noreferrer">RaXpol</a>
+                    <a class="nav-item" href="http://data.nadocast.com/viewer.html" target="_blank" rel="noopener noreferrer">NadoCast</a>
+                    <a class="nav-item" href="https://weather.rap.ucar.edu" target="_blank" rel="noopener noreferrer">Rap Realtime</a>
+                    <a class="nav-item" href="https://svr.guru/index.php" target="_blank" rel="noopener noreferrer">DOW6/7</a>
+                    <a class="nav-item" href="https://atlas.niu.edu/forecast/scp/" target="_blank" rel="noopener noreferrer">CSU Extended Forecast</a>
+                    <a class="nav-item" href="https://autumnsky.us/vad/" target="_blank" rel="noopener noreferrer">VWP Hodographs</a>
+                    <a class="nav-item" href="https://weather.cod.edu/textserv/warnings" target="_blank" rel="noopener noreferrer">COD Severe warnings Dashboard</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="dropdown-btn nav-item" aria-haspopup="true" aria-expanded="false">Space Weather ▾</button>
+                <div class="dropdown-content" role="menu" aria-label="Space Weather & Auroras menu">
+                    <a class="nav-item" href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener noreferrer">NOAA Space Weather Prediction Center</a>
+                    <a class="nav-item" href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" target="_blank" rel="noopener noreferrer">Aurora 30-Min Forecast</a>
+                    <a class="nav-item" href="https://www.swpc.noaa.gov/products/3-day-forecast" target="_blank" rel="noopener noreferrer">3-Day Forecast</a>
+                    <a class="nav-item" href="goes-magnetometer.html" target="_self" rel="noopener noreferrer">GOES Magnetometer Data</a>
+                    <a class="nav-item" href="https://www.swpc.noaa.gov/products/solar-wind-integration-rapid-refresh" target="_blank" rel="noopener noreferrer">Solar Wind Data</a>
+                    <a class="nav-item" href="rtsw.html" target="_self" rel="noopener noreferrer">Real-Time Solar Wind - RTSW</a>
+                    <a class="nav-item" href="aurora-forecast.html" target="_self" rel="noopener noreferrer">AVC (Aurora Visibility Calculator)</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="clock-container">
+            <div class="clock-item">
+                <span class="clock-label">Local (VT)</span>
+                <span id="local-clock" class="time-display">00:00:00</span>
+            </div>
+            <div class="clock-item">
+                <span class="clock-label">Zulu (UTC)</span>
+                <span id="zulu-clock" class="time-display">00:00:00</span>
+            </div>
+        </div>
+
+            <div class="nav-links">
+            <span class="nav-disabled" aria-disabled="true">HREFv2</span>
+            <a href="#" id="btn-ecmwf" data-url="https://www.pivotalweather.com/model.php?m=ecmwf_full&p=prateptype_cat_ecmwf-imp&rh=2026021612&fh=12&r=us_ne&dpdt=&mc=">ECMWF</a>
+            <a href="#" id="btn-hrrr" data-url="https://www.pivotalweather.com/model.php?m=hrrr&p=ref1km&rh=2026021701&fh=0&r=us_ne&dpdt=&mc=">HRRR</a>
+
+        </div>
+        
+        <div></div>
+    </nav>
+
+    <div class="main-wrapper">
+        <div class="splash-container">
+            <div class="logo-area">
+                <h1>Vermont State University</h1>
+                <h2>Lyndon Weather Center</h2>
+            </div>
+
+            <div class="loop-frame">
+                <img id="radar-loop" src="https://radar.weather.gov/ridge/standard/KCXX_loop.gif" alt="NWS KCXX Burlington Radar Loop">
+            </div>
+
+            <div class="loop-controls">
+                <div>RADAR NWS KCXX (Burlington, VT)</div>
+            </div>
+        </div>
+
+        <!-- Warning Notification -->
+        <div id="warning-notification" class="warning-notification" style="display: none;">
+            <button class="warning-close-btn" onclick="closeWarning()">×</button>
+            <div class="warning-content">
+                <div class="warning-title" id="warning-title"></div>
+                <div class="warning-description" id="warning-description"></div>
+                <div class="warning-continuation" id="warning-continuation" style="display: none;"></div>
+                <div class="warning-local-alert" id="warning-local-alert" style="display: none;">⚠️ SEEK SHELTER NOW ⚠️</div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 0.8rem;">
+        By Emerson Charles (she/her)<3
+    </footer>
+    <footer>
+        If you have any questions or need assistance, please contact me dxc00407@vsc.edu
+    </footer>
+
+    <script>
+        let use24Hour = true;
+
+        function updateClocks() {
+            const now = new Date();
+            const localOptions = { hour12: !use24Hour, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('local-clock').textContent = now.toLocaleTimeString('en-US', localOptions);
+
+            const zuluOptions = { timeZone: 'UTC', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const zuluTime = now.toLocaleTimeString('en-US', zuluOptions);
+            document.getElementById('zulu-clock').textContent = `${zuluTime}Z`;
+        }
+
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        setInterval(() => {
+            const radarImg = document.getElementById('radar-loop');
+            const currentSrc = radarImg.src.split('?')[0];
+            radarImg.src = currentSrc + '?t=' + new Date().getTime();
+        }, 300000);
+
+        const clockContainer = document.querySelector('.clock-container');
+        if (clockContainer) {
+            clockContainer.addEventListener('click', function() {
+                use24Hour = !use24Hour;
+                updateClocks();
+            });
+        }
+
+        (function() {
+            const ecmwfBtn = document.getElementById('btn-ecmwf');
+            if (ecmwfBtn) {
+                ecmwfBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = ecmwfBtn.dataset.url || 'https://www.tropicaltidbits.com/analysis/models/?model=ecmwf&region=conus&pkg=mslp_pcpn';
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                });
+            }
+
+            const hrrrBtn = document.getElementById('btn-hrrr');
+            if (hrrrBtn) {
+                hrrrBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = hrrrBtn.dataset.url || 'https://www.pivotalweather.com/model.php?m=hrrr&p=ref1km&rh=2026021701&fh=0&r=us_ne&dpdt=&mc=';
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                });
+            }
+
+            // Always default to radar view on page load
+            window.addEventListener('DOMContentLoaded', function() {
+                localStorage.removeItem('currentView');
+            });
+        })();
+
+        // Warning System - Fetch and display severe weather warnings
+        (function() {
+            console.log('%c[DEBUG] Warning System IIFE starting...', 'color: #ff00ff; font-weight: bold');
+            let lastWarnings = {};
+            let warningTimeout = null;
+            let activeWarningId = null;
+            let tornadoEmergencyTimeout = null;
+            const originalRadarSrc = 'https://radar.weather.gov/ridge/standard/KCXX_loop.gif';
+            
+            // NWS Office to nearest radar mapping
+            const officeToRadar = {
+                'KJKL': 'KJKX',  // Jackson, KY
+                'KILX': 'KILX',  // Lincoln, IL
+                'KPBZ': 'KPBZ',  // Pittsburg, PA
+                'KLMK': 'KLMK',  // Louisville, KY
+                'KPSP': 'KPSP',  // Pueblo, CO
+                'KSGO': 'KSGO',  // Spokane, WA
+                'KOUN': 'KOUN',  // Norman, OK
+                'KTLX': 'KTLX',  // Tulsa, OK
+                'KVTX': 'KVTX',  // Fort Worth, TX
+                'KRAX': 'KRAXX', // Raleigh, NC
+                'KMEG': 'KMEG',  // Memphis, TN
+                'KLWX': 'KLWX',  // Sterling, VA
+                'KRTP': 'KRTP',  // Roanoke, VA
+                'KSGX': 'KSGX',  // San Diego, CA
+                'KINDX': 'KIND', // Indianapolis, IN
+                'KPUB': 'KPUB',  // Pueblo, CO
+                'KTOX': 'KTOX',  // Tonopah, NV
+                'KRDK': 'KRDK',  // Redding, CA
+                'KUNX': 'KUNX',  // Tucson, AZ
+                'KLSX': 'KLSX',  // St. Louis, MO
+                'KESX': 'KESX',  // Las Vegas, NV
+                'KOXR': 'KOXR',  // Oxnard, CA
+                'KMHX': 'KMHX',  // Morehead City, NC
+                'KRAH': 'KRAH',  // Alamosa, CO
+                'KOPF': 'KOPX',  // Portland, OR
+                'KRDU': 'KRDU',  // Raleigh, NC
+                'KMBX': 'KMBX',  // Miami, FL
+                'KUNR': 'KUNR',  // Tucson, AZ
+                'KOHX': 'KOHX',  // Nashville, TN
+                'KSRC': 'KSRC',  // Spokane, WA
+                'KFWD': 'KFWS',  // Fort Worth, TX
+                'KGRK': 'KGRK',  // Greenville-Spartanburg, SC
+                'KCRP': 'KCRP',  // Corpus Christi, TX
+                'KEWX': 'KEWS',  // Austin/San Antonio, TX
+                'KEPH': 'KEPZ',  // El Paso, TX
+                'KLZK': 'KLZK'   // Little Rock, AR
+            };
+
+            // NWS Office to city name mapping
+            const officeToCity = {
+                'KJKL': 'Jackson, KY',
+                'KILX': 'Lincoln, IL',
+                'KPBZ': 'Pittsburgh, PA',
+                'KLMK': 'Louisville, KY',
+                'KPSP': 'Pueblo, CO',
+                'KSGO': 'Spokane, WA',
+                'KOUN': 'Norman, OK',
+                'KTLX': 'Tulsa, OK',
+                'KVTX': 'Fort Worth, TX',
+                'KRAX': 'Raleigh, NC',
+                'KMEG': 'Memphis, TN',
+                'KLWX': 'Sterling, VA',
+                'KRTP': 'Roanoke, VA',
+                'KSGX': 'San Diego, CA',
+                'KINDX': 'Indianapolis, IN',
+                'KPUB': 'Pueblo, CO',
+                'KTOX': 'Tonopah, NV',
+                'KRDK': 'Redding, CA',
+                'KUNX': 'Tucson, AZ',
+                'KLSX': 'St. Louis, MO',
+                'KESX': 'Las Vegas, NV',
+                'KOXR': 'Oxnard, CA',
+                'KMHX': 'Morehead City, NC',
+                'KRAH': 'Alamosa, CO',
+                'KOPF': 'Portland, OR',
+                'KRDU': 'Raleigh, NC',
+                'KMBX': 'Miami, FL',
+                'KUNR': 'Tucson, AZ',
+                'KOHX': 'Nashville, TN',
+                'KSRC': 'Spokane, WA',
+                'KFWD': 'Fort Worth, TX',
+                'KGRK': 'Greenville-Spartanburg, SC',
+                'KCRP': 'Corpus Christi, TX',
+                'KEWX': 'Austin/San Antonio, TX',
+                'KEPH': 'El Paso, TX',
+                'KLZK': 'Little Rock, AR'
+            };
+
+            window.closeWarning = function() {
+                const warningNotif = document.getElementById('warning-notification');
+                warningNotif.classList.add('hide');
+                setTimeout(() => {
+                    warningNotif.style.display = 'none';
+                    warningNotif.classList.remove('hide');
+                    activeWarningId = null;
+                    // Restore original radar if no active tornado emergency
+                    if (!tornadoEmergencyTimeout) {
+                        restoreOriginalRadar();
+                    }
+                }, 500);
+            };
+
+            async function fetchWarnings() {
+                try {
+                    // Determine the API endpoint based on the current origin
+                    let warningApiUrl;
+                    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                        // Local development - direct API call
+                        warningApiUrl = 'https://api.weather.gov/alerts/active';
+                    } else {
+                        // Live site - use CORS proxy
+                        const encodedUrl = encodeURIComponent('https://api.weather.gov/alerts/active');
+                        warningApiUrl = `https://api.allorigins.win/raw?url=${encodedUrl}`;
+                    }
+                    
+                    const response = await fetch(warningApiUrl);
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    
+                    // Debug: Show how many warnings were returned
+                    console.log(`%c[API] Fetched ${data.features ? data.features.length : 0} total alerts from NWS API`, 'color: #00A5B3; font-weight: bold');
+                    
+                    // Parse warnings from NWS API response
+                    const warnings = parseWarningsFromJSON(data);
+                    
+                    console.log(`%c[API] Parsed ${warnings.length} warnings (Tornado/Severe/Emergency only)`, 'color: #00A5B3; font-weight: bold');
+                    
+                    // Process new warnings
+                    warnings.forEach(warning => {
+                        processWarning(warning);
+                    });
+                } catch (error) {
+                    console.error('Warning fetch error:', error);
+                }
+            }
+
+            function parseWarningsFromJSON(data) {
+                const warnings = [];
+                
+                if (!data.features || !Array.isArray(data.features)) {
+                    return warnings;
+                }
+                
+                data.features.forEach((feature, index) => {
+                    const props = feature.properties;
+                    
+                    // Log all properties from first warning to debug
+                    if (index === 0) {
+                        console.log('=== FIRST WARNING PROPERTIES ===');
+                        console.log('All keys:', Object.keys(props));
+                        console.log('Full properties object:', props);
+                    }
+                    
+                    // Extract warning type from event field with qualifiers
+                    let warningType = null;
+                    let displayEvent = props.event || '';
+                    
+                    if (props.event && props.event.includes('Tornado Emergency')) {
+                        warningType = 'Tornado Emergency';
+                    } else if (props.event && props.event.includes('Tornado Warning')) {
+                        warningType = 'Tornado Warning';
+                    } else if (props.event && props.event.includes('Severe Thunderstorm Warning')) {
+                        warningType = 'Severe Thunderstorm Warning';
+                    }
+                    
+                    // Only process Tornado, Severe Thunderstorm, and Tornado Emergency
+                    if (!warningType) return;
+                    
+                    // Extract NWS office code - try multiple methods
+                    let issuingOffice = 'UNKNOWN';
+                    
+                    // Method 1: Check for 'source' property (contains WFO code)
+                    if (props.source) {
+                        issuingOffice = props.source;
+                    }
+                    // Method 2: Check if there's a direct office property
+                    else if (props.office) {
+                        issuingOffice = props.office;
+                    }
+                    // Method 3: Extract from senderName (try different formats)
+                    else if (props.senderName) {
+                        // Try format: "WFO/KLWX" or similar
+                        let match = props.senderName.match(/\/([A-Z]{4})/);
+                        if (match) {
+                            issuingOffice = match[1];
+                        } else {
+                            // Try format: "NWS KLWX"
+                            match = props.senderName.match(/NWS\s+([A-Z]{4})/);
+                            if (match) {
+                                issuingOffice = match[1];
+                            }
+                        }
+                    }
+                    
+                    // Extract issued time - handle ISO 8601 format
+                    let issuedTime = 'Unknown Time';
+                    if (props.issued) {
+                        try {
+                            const issuedDate = new Date(props.issued);
+                            const timestamp = issuedDate.getTime();
+                            
+                            if (!isNaN(timestamp) && timestamp > 0) {
+                                issuedTime = issuedDate.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + 'Z';
+                            } else {
+                                console.warn('Invalid timestamp for date:', props.issued);
+                            }
+                        } catch (e) {
+                            console.warn('Date parse error:', props.issued, e);
+                        }
+                    }
+                    
+                    // Area description contains city/location information
+                    const cities = props.areaDesc || 'Unknown Area';
+                    
+                    warnings.push({
+                        type: warningType,
+                        displayEvent: displayEvent,
+                        issuingOffice: issuingOffice,
+                        issuedTime: issuedTime,
+                        cities: cities,
+                        id: `${warningType}-${issuingOffice}-${cities}`.toLowerCase().replace(/\s+/g, '-')
+                    });
+                    
+                    // Debug logging
+                    console.log('Parsed warning:', {
+                        event: displayEvent,
+                        office: issuingOffice,
+                        time: issuedTime,
+                        area: cities
+                    });
+                });
+
+                return warnings;
+            }
+
+            function processWarning(warning) {
+                const warningKey = `${warning.type}-${warning.cities}`;
+                const now = new Date();
+                
+                // Check if this is a continuation of a previous warning
+                let isContinuation = false;
+                if (lastWarnings[warningKey]) {
+                    const timeDiff = now - lastWarnings[warningKey].time;
+                    // If warning was issued within 3 minutes, mark as continuation
+                    if (timeDiff < 180000) { // 3 minutes in milliseconds
+                        isContinuation = true;
+                    }
+                }
+                
+                lastWarnings[warningKey] = { time: now, isContinuation };
+                
+                // Only show warning if it's new or active
+                if (activeWarningId !== warning.id) {
+                    displayWarning(warning, isContinuation);
+                }
+            }
+
+            function displayWarning(warning, isContinuation) {
+                activeWarningId = warning.id;
+                clearTimeout(warningTimeout);
+                
+                const warningNotif = document.getElementById('warning-notification');
+                const titleEl = document.getElementById('warning-title');
+                const descEl = document.getElementById('warning-description');
+                const contEl = document.getElementById('warning-continuation');
+                const localAlertEl = document.getElementById('warning-local-alert');
+                
+                // Set warning type class for styling
+                warningNotif.className = 'warning-notification';
+                if (warning.type === 'Tornado Emergency') {
+                    warningNotif.classList.add('tornado-emergency');
+                    // Switch radar to nearest site for tornado emergency
+                    switchRadarToWarningLocation(warning.issuingOffice);
+                } else if (warning.type === 'Tornado Warning') {
+                    warningNotif.classList.add('tornado');
+                } else {
+                    warningNotif.classList.add('severe-thunderstorm');
+                }
+                
+                // Set content
+                titleEl.textContent = warning.displayEvent;
+                descEl.textContent = warning.cities;
+                
+                // Check if warning affects St Johnsbury or Lyndonville area (Caledonia County, VT)
+                const affectsLocalArea = /st\s*johnsbury|lyndonville|caledonia/i.test(warning.cities);
+                const isSevereWarning = warning.type === 'Tornado Warning' || warning.type === 'Severe Thunderstorm Warning' || warning.type === 'Tornado Emergency';
+                
+                if (affectsLocalArea && isSevereWarning) {
+                    localAlertEl.style.display = 'block';
+                } else {
+                    localAlertEl.style.display = 'none';
+                }
+                
+                if (isContinuation) {
+                    contEl.textContent = '⚠ Continuation of previous warning';
+                    contEl.style.display = 'block';
+                } else {
+                    contEl.style.display = 'none';
+                }
+                
+                // Show notification
+                warningNotif.style.display = 'block';
+                
+                // Auto-dismiss after 10 seconds for regular warnings
+                // But for Tornado Emergency, keep it longer
+                const dismissTime = warning.type === 'Tornado Emergency' ? 15000 : 10000;
+                warningTimeout = setTimeout(() => {
+                    closeWarning();
+                }, dismissTime);
+            }
+
+            // Expose displayWarning to window so test functions and console can call it
+            window.displayWarning = displayWarning;
+            console.log('%c[DEBUG] displayWarning exposed to window', 'color: #00ff00; font-weight: bold');
+
+            function switchRadarToWarningLocation(officeCode) {
+                const radarImg = document.getElementById('radar-loop');
+                const radarCode = officeToRadar[officeCode] || 'KCXX';
+                const newRadarSrc = `https://radar.weather.gov/ridge/standard/${radarCode}_loop.gif`;
+                
+                // Clear any existing tornado emergency timeout
+                if (tornadoEmergencyTimeout) {
+                    clearTimeout(tornadoEmergencyTimeout);
+                }
+                
+                radarImg.src = newRadarSrc;
+                
+                // Keep the custom radar for 30 minutes from the tornado emergency
+                tornadoEmergencyTimeout = setTimeout(() => {
+                    restoreOriginalRadar();
+                    tornadoEmergencyTimeout = null;
+                }, 1800000); // 30 minutes
+            }
+
+            function restoreOriginalRadar() {
+                const radarImg = document.getElementById('radar-loop');
+                radarImg.src = originalRadarSrc + '?t=' + new Date().getTime();
+                if (tornadoEmergencyTimeout) {
+                    clearTimeout(tornadoEmergencyTimeout);
+                    tornadoEmergencyTimeout = null;
+                }
+            }
+
+            // Fetch warnings every 30 seconds
+            fetchWarnings();
+            setInterval(fetchWarnings, 30000);
+
+            // TEST FUNCTIONS - Call from browser console
+            window.testTornadoEmergency = function(office = 'KOUN', cities = 'Canadian, Texas, Beaver, Beaver (Oklahoma)') {
+                const testWarning = {
+                    type: 'Tornado Emergency',
+                    displayEvent: 'Tornado Emergency (Observed)',
+                    issuingOffice: office,
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: cities,
+                    id: `test-tornado-emergency-${Date.now()}`
+                };
+                displayWarning(testWarning, false);
+                console.log('Tornado Emergency test triggered for:', office);
+            };
+
+            window.testLocalTornadoWarning = function() {
+                const testWarning = {
+                    type: 'Tornado Warning',
+                    displayEvent: 'Tornado Warning (Radar Indicated)',
+                    issuingOffice: 'KLWX',
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: 'St Johnsbury, Lyndonville',
+                    id: `test-local-tornado-${Date.now()}`
+                };
+                displayWarning(testWarning, false);
+                console.log('LOCAL Tornado Warning test triggered - "Seek Shelter Now" should appear');
+            };
+
+            window.testLocalSevereWarning = function() {
+                const testWarning = {
+                    type: 'Severe Thunderstorm Warning',
+                    displayEvent: 'Severe Thunderstorm Warning (Considerable)',
+                    issuingOffice: 'KLWX',
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: 'Lyndonville, St Johnsbury',
+                    id: `test-local-svr-${Date.now()}`
+                };
+                displayWarning(testWarning, false);
+                console.log('LOCAL Severe Thunderstorm test triggered - "Seek Shelter Now" should appear');
+            };
+
+            window.testTornadoWarning = function(office = 'KILX', cities = 'Coles, IL, Cumberland, IL') {
+                const testWarning = {
+                    type: 'Tornado Warning',
+                    displayEvent: 'Tornado Warning (Radar Indicated)',
+                    issuingOffice: office,
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: cities,
+                    id: `test-tornado-${Date.now()}`
+                };
+                displayWarning(testWarning, false);
+                console.log('Tornado Warning test triggered for:', office);
+            };
+
+            window.testSevereThunderstorm = function(office = 'KPBZ', cities = 'Monongalia, WV, Preston, WV') {
+                const testWarning = {
+                    type: 'Severe Thunderstorm Warning',
+                    displayEvent: 'Severe Thunderstorm Warning (Destructive)',
+                    issuingOffice: office,
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: cities,
+                    id: `test-svr-${Date.now()}`
+                };
+                displayWarning(testWarning, false);
+                console.log('Severe Thunderstorm Warning test triggered for:', office);
+            };
+
+            window.testContinuation = function() {
+                const testWarning = {
+                    type: 'Tornado Warning',
+                    displayEvent: 'Tornado Warning (Radar Indicated)',
+                    issuingOffice: 'KOUN',
+                    issuedTime: new Date().toLocaleTimeString('en-US', { hour12: false }) + 'Z',
+                    cities: 'Canadian, Texas',
+                    id: `test-tornado-continuation`
+                };
+                // Set last warning time to 2 minutes ago to trigger continuation
+                lastWarnings[`Tornado Warning-Canadian, Texas`] = { time: new Date(Date.now() - 120000), isContinuation: false };
+                displayWarning(testWarning, true);
+                console.log('Continuation test triggered');
+            };
+
+            window.testRestoreRadar = function() {
+                restoreOriginalRadar();
+                console.log('Radar restored to original KCXX');
+            };
+
+            window.clearStuckWarning = function() {
+                const warningNotif = document.getElementById('warning-notification');
+                warningNotif.style.display = 'none';
+                warningNotif.classList.remove('hide');
+                activeWarningId = null;
+                lastWarnings = {};
+                restoreOriginalRadar();
+                console.log('%cWarning cleared and warning state reset', 'color: #00ff00; font-weight: bold');
+            };
+
+            window.checkLiveAPI = function() {
+                fetch('https://api.weather.gov/alerts/active')
+                    .then(r => r.json())
+                    .then(data => {
+                        console.log('%c=== LIVE API CHECK ===', 'color: #00ff00; font-weight: bold; font-size: 14px');
+                        console.log(`Total alerts: ${data.features ? data.features.length : 0}`);
+                        
+                        if (data.features && data.features.length > 0) {
+                            console.log('%cFirst 3 alerts details:', 'color: #ffff00; font-weight: bold');
+                            data.features.slice(0, 3).forEach((f, i) => {
+                                const p = f.properties;
+                                console.log(`\n[${i}] Event: ${p.event}`);
+                                console.log(`    Area: ${p.areaDesc}`);
+                                console.log(`    Sent: ${p.sent}`);
+                                console.log(`    Sender: ${p.senderName || 'N/A'}`);
+                            });
+                        } else {
+                            console.log('%cNo alerts currently active', 'color: #ffff00');
+                        }
+                    })
+                    .catch(e => console.error('API check failed:', e));
+            };
+
+            window.showWarningTest = function() {
+                console.log('%c=== WARNING SYSTEM TEST COMMANDS ===', 'color: #ff6b6b; font-size: 14px; font-weight: bold');
+                console.log('%ctestTornadoEmergency(office, cities)', 'color: #7b2cbf; font-weight: bold');
+                console.log('  → Flashes purple, switches radar, keeps for 30 min');
+                console.log('  → Example: testTornadoEmergency("KOUN", "Canadian, Texas")');
+                console.log('');
+                console.log('%ctestTornadoWarning(office, cities)', 'color: #dc143c; font-weight: bold');
+                console.log('  → Red warning box');
+                console.log('  → Example: testTornadoWarning("KILX", "Coles, IL")');
+                console.log('');
+                console.log('%ctestLocalTornadoWarning()', 'color: #ffff00; font-weight: bold; background: #dc143c; padding: 5px');
+                console.log('  → Shows LOCAL warning for St Johnsbury/Lyndonville with "SEEK SHELTER NOW" alert');
+                console.log('');
+                console.log('%ctestLocalSevereWarning()', 'color: #ffff00; font-weight: bold; background: #ffa500; padding: 5px');
+                console.log('  → Shows LOCAL Severe Thunderstorm for area with "SEEK SHELTER NOW" alert');
+                console.log('');
+                console.log('%ctestSevereThunderstorm(office, cities)', 'color: #ffa500; font-weight: bold');
+                console.log('  → Orange warning box');
+                console.log('  → Example: testSevereThunderstorm("KPBZ", "Monongalia, WV")');
+                console.log('');
+                console.log('%ctestContinuation()', 'color: #ffd500; font-weight: bold');
+                console.log('  → Shows "Continuation of previous warning"');
+                console.log('');
+                console.log('%ctestRestoreRadar()', 'color: #00A5B3; font-weight: bold');
+                console.log('  → Restores radar to original KCXX');
+                console.log('');
+                console.log('%c=== DEBUGGING UTILITIES ===', 'color: #ffd500; font-weight: bold');
+                console.log('%ccheckLiveAPI()', 'color: #00ff00; font-weight: bold');
+                console.log('  → Check what warnings the NWS API is currently sending');
+                console.log('%cclearStuckWarning()', 'color: #ff6b6b; font-weight: bold');
+                console.log('  → Clear any stuck warning and reset system state');
+                console.log('');
+                console.log('%c=== LOCAL AREA TRIGGER KEYWORDS ===', 'color: #ffff00; font-size: 12px');
+                console.log('Warning will show "SEEK SHELTER NOW" if it includes: St Johnsbury, Lyndonville, or Caledonia (VT)');
+                console.log('');
+                console.log('%c=== NWS OFFICE CODES ===', 'color: #ff6b6b; font-size: 12px');
+                console.log('KOUN (Oklahoma), KILX (Illinois), KPBZ (Pennsylvania), KLMK (Kentucky), KTLX (Oklahoma), KVTX (Texas), KMEG (Tennessee)');
+            };
+
+            // Auto-show test commands on page load
+            console.log('%cWARNING SYSTEM LOADED v2.1 (displayWarning exposed) - Type: showWarningTest()', 'color: #00A5B3; font-weight: bold; font-size: 12px');
+            console.log('%c[SUCCESS] All test functions ready:', 'color: #00ff00; font-weight: bold', ['testTornadoEmergency', 'testLocalTornadoWarning', 'testLocalSevereWarning', 'testTornadoWarning', 'testSevereThunderstorm', 'testContinuation', 'testRestoreRadar', 'clearStuckWarning', 'checkLiveAPI', 'showWarningTest'].join(', '));
+        })();
+
+        // Dropdown click behavior: support multiple dropdowns, toggle on click, close others
+        (function() {
+            const dropdowns = Array.from(document.querySelectorAll('.left-nav .dropdown'));
+            if (!dropdowns.length) return;
+
+            function closeAll() {
+                dropdowns.forEach(d => {
+                    d.classList.remove('open');
+                    const b = d.querySelector('.dropdown-btn');
+                    if (b) b.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            dropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.dropdown-btn');
+                if (!btn) return;
+
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isOpen = dropdown.classList.contains('open');
+                    closeAll();
+                    if (!isOpen) {
+                        dropdown.classList.add('open');
+                        btn.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+
+            // Close when clicking outside any dropdown
+            document.addEventListener('click', function(e) {
+                if (!dropdowns.some(d => d.contains(e.target))) closeAll();
+            });
+
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeAll();
+            });
+        })();
+    </script>
+</body>
+</html>
+ 
+ 
